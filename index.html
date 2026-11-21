@@ -64,9 +64,11 @@ footer{text-align:center;color:#8a7a7e;font-size:13px;padding:24px 16px 90px}
 (function(){
 var q=document.getElementById('q'),qc=document.getElementById('qc'),cat='الكل';
 function n(t){return (t||'').toLowerCase().replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').trim();}
-var cards=[].slice.call(document.querySelectorAll('.card')),rows=[].slice.call(document.querySelectorAll('.row'));
+var cards=[],rows=[];
+function collect(){cards=[].slice.call(document.querySelectorAll('.card'));rows=[].slice.call(document.querySelectorAll('.row'));
 cards.forEach(function(c){c.dataset.t=n(c.textContent+' '+c.dataset.cat);});
-rows.forEach(function(r){r.dataset.t=n(r.textContent+' noah');});
+rows.forEach(function(r){r.dataset.t=n(r.textContent+' noah');});}
+collect();
 function ok(el){var cs=(el.dataset.cat||'').split('|');return (cat==='الكل'||cs.indexOf(cat)>-1)&&(!nq||el.dataset.t.indexOf(nq)>-1);}
 var nq='';
 function run(){nq=n(q.value);qc.hidden=!q.value;
@@ -79,5 +81,26 @@ function run(){nq=n(q.value);qc.hidden=!q.value;
 q.addEventListener('input',run);qc.addEventListener('click',function(){q.value='';run();q.focus();});
 [].forEach.call(document.querySelectorAll('.cats .cat'),function(x){x.addEventListener('click',function(){cat=x.dataset.c;run();});});
 document.getElementById('reset').addEventListener('click',function(){q.value='';cat='الكل';run();});
+
+var SHEET='1e0MV5yLVCQYioVzWC0U7qk_zxkKbsMWQmalZ2M2O2lA',WA='201012639321',BASE=['أطقم سرير','فوط وبورنس','أطفال','بطاطين وكوفرتات','ستائر'];
+function esc(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function cell(r,i){var c=r.c&&r.c[i];return c&&c.v!=null?String(c.v).trim():'';}
+window.esyLoad=function(res){try{
+ if(!res||res.status!=='ok'||!res.table||!res.table.rows)return;
+ var rs=res.table.rows.slice(1),items=[],extra=[];
+ rs.forEach(function(r){var name=cell(r,0);if(!name)return;
+  var show=n(cell(r,4));if(/^(لا|no|false|0|اخفاء|hide|مخفي)$/.test(show))return;
+  var cat=cell(r,2)||'أخرى';items.push({name:name,price:cell(r,1),cat:cat,photos:cell(r,3).split(/[\s,]+/).filter(function(u){return /^https?:/.test(u);}),note:cell(r,5)});
+  if(BASE.indexOf(cat)<0&&extra.indexOf(cat)<0)extra.push(cat);});
+ if(!items.length)return;
+ var html='';items.forEach(function(p){
+  var ask=!p.price||p.price.indexOf('اسأل')>-1,msg=encodeURIComponent('أهلاً، عايزة أسأل عن: '+p.name);
+  var imgs=p.photos.map(function(u){return '<img loading="lazy" src="'+esc(u)+'" alt="'+esc(p.name)+'">';}).join('');
+  html+='<article class="card" data-cat="'+esc(p.cat)+'"><div class="gal">'+imgs+'</div><div class="cb"><h3>'+esc(p.name)+'</h3><div class="price'+(ask?' ask':'')+'">'+(ask?'اسأل عن السعر':esc(p.price))+'</div>'+(p.note?'<p>'+esc(p.note)+'</p>':'')+'<a class="btn sm" href="https://wa.me/'+WA+'?text='+msg+'" target="_blank" rel="noopener">'+(ask?'اسألي عن السعر واتساب':'اطلبي واتساب')+'</a></div></article>';});
+ document.querySelector('#sec-cat .grid').innerHTML=html;
+ var cb=document.querySelector('.cats');extra.forEach(function(c){var b=document.createElement('button');b.type='button';b.className='cat';b.dataset.c=c;b.textContent=c;b.addEventListener('click',function(){cat=c;run();});cb.appendChild(b);});
+ collect();run();
+}catch(e){}};
+var sc=document.createElement('script');sc.async=true;sc.src='https://docs.google.com/spreadsheets/d/'+SHEET+'/gviz/tq?gid=0&tqx=responseHandler:esyLoad&_='+Math.floor(Date.now()/60000);document.head.appendChild(sc);
 })();
 </script></body></html>
