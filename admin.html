@@ -28,7 +28,7 @@ small{color:#8a6a5a}
 <option>أطقم سرير</option><option>فوط وبورنس</option><option>أطفال</option><option>بطاطين وكوفرتات</option><option>ستائر</option>
 </select>
 <label for="img">رابط الصورة <small>(رابط واحد أو أكثر، بينهم فاصلة)</small></label><input id="img" type="url" dir="ltr" placeholder="https://...">
-<div class="chk"><input type="checkbox" id="offer"><label for="offer">ضمن العروض</label></div>
+<div class="chk"><input type="checkbox" id="offer" checked><label for="offer">إظهار في الموقع</label></div>
 <label for="desc">وصف</label><textarea id="desc"></textarea>
 <label for="sec">الرمز السري *</label><input id="sec" type="password" dir="ltr" required autocomplete="off">
 <button id="go" type="submit">إضافة المنتج</button>
@@ -49,7 +49,7 @@ f.addEventListener('submit',function(e){
  .then(function(r){return r.json();})
  .then(function(j){
   if(j.ok){localStorage.setItem('esy_s',d.secret);show('تمت الإضافة ✓ المنتج هيظهر في الموقع خلال دقائق','ok');
-   ['name','price','img','desc'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('offer').checked=false;}
+   ['name','price','img','desc'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('offer').checked=true;}
   else if(j.error==='wrong_secret')show('الرمز السري غلط','err');
   else if(j.error==='missing_name')show('اكتب اسم المنتج','err');
   else show('حصلت مشكلة، حاول تاني','err');
