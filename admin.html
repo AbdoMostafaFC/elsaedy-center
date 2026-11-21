@@ -27,7 +27,7 @@ small{color:#8a6a5a}
 <select id="cat" required>
 <option>أطقم سرير</option><option>فوط وبورنس</option><option>أطفال</option><option>بطاطين وكوفرتات</option><option>ستائر</option>
 </select>
-<label for="img">رابط الصورة <small>(رابط واحد أو أكثر، بينهم فاصلة)</small></label><input id="img" type="url" dir="ltr" placeholder="https://...">
+<label for="pics">صور المنتج <small>(اختار صورة أو أكتر من الموبايل)</small></label><input id="pics" type="file" accept="image/*" multiple><div id="prev" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
 <div class="chk"><input type="checkbox" id="offer" checked><label for="offer">إظهار في الموقع</label></div>
 <label for="desc">وصف</label><textarea id="desc"></textarea>
 <label for="sec">الرمز السري *</label><input id="sec" type="password" dir="ltr" required autocomplete="off">
@@ -37,23 +37,27 @@ small{color:#8a6a5a}
 </div>
 <script>
 var EXEC='https://script.google.com/macros/s/AKfycbwgWsZYDDEzsYx4zR7YjnnRKmS9k2tqYIo7yuMdohQLrJKEXizqjmCO1-ZTpTYafaxV2A/exec';
+var pics=document.getElementById('pics'),prev=document.getElementById('prev');
+function shrink(file){return new Promise(function(res,rej){var im=new Image(),u=URL.createObjectURL(file);im.onload=function(){var M=1000,r=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',0.82));};im.onerror=function(){rej();};im.src=u;});}
+pics.addEventListener('change',function(){prev.innerHTML='';Array.prototype.slice.call(pics.files,0,8).forEach(function(f){var i=document.createElement('img');i.src=URL.createObjectURL(f);i.style.cssText='width:64px;height:64px;object-fit:cover;border-radius:8px';prev.appendChild(i);});});
 var f=document.getElementById('f'),m=document.getElementById('msg'),b=document.getElementById('go'),s=document.getElementById('sec');
 s.value=localStorage.getItem('esy_s')||'';
 function show(t,c){m.textContent=t;m.className=c;m.style.display='block';}
 f.addEventListener('submit',function(e){
  e.preventDefault();b.disabled=true;m.style.display='none';
+ var files=Array.prototype.slice.call(pics.files,0,8);
+ Promise.all(files.map(shrink)).then(function(imgs){
  var d={secret:s.value.trim(),name:document.getElementById('name').value,price:document.getElementById('price').value,
-  category:document.getElementById('cat').value,image:document.getElementById('img').value,
+  category:document.getElementById('cat').value,images:imgs,
   offer:document.getElementById('offer').checked,desc:document.getElementById('desc').value};
- fetch(EXEC,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)})
- .then(function(r){return r.json();})
- .then(function(j){
+ show('جاري الرفع...','ok');
+ return fetch(EXEC,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(d)}).then(function(r){return r.json();}).then(function(j){
   if(j.ok){localStorage.setItem('esy_s',d.secret);show('تمت الإضافة ✓ المنتج هيظهر في الموقع خلال دقائق','ok');
-   ['name','price','img','desc'].forEach(function(i){document.getElementById(i).value='';});document.getElementById('offer').checked=true;}
+   ['name','price','desc'].forEach(function(i){document.getElementById(i).value='';});pics.value='';prev.innerHTML='';document.getElementById('offer').checked=true;}
   else if(j.error==='wrong_secret')show('الرمز السري غلط','err');
   else if(j.error==='missing_name')show('اكتب اسم المنتج','err');
   else show('حصلت مشكلة، حاول تاني','err');
- }).catch(function(){show('تعذر الاتصال، تأكد من النت وحاول تاني','err');})
+ });}).catch(function(){show('تعذر الرفع، تأكد من النت وحاول تاني','err');})
  .then(function(){b.disabled=false;});
 });
 </script></body></html>
